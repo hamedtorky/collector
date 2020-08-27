@@ -1,6 +1,7 @@
 from logging import getLogger
 from django.core.management.base import BaseCommand, CommandError
 from Collector.modbus import MODBUS
+from Collector.serialBus import SERIALBUS
 
 from Collector.models import Connection as conn
 
@@ -18,35 +19,43 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            print(options['method'])
+            print("{} method is running ...".format(options['method'][1]))
             if options['method'][1] == "MODBUS":
-                print("ModBus method is running ...")
                 if options['method'][2] == "model":
                     bus_info = conn.objects.filter(name=options['method'][3], connection_type="MODBUS").last()
                     if bus_info is not None:
-                        modbus = MODBUS(bus_info.baudrate, bus_info.port_name,timeOut=bus_info.timeOut)
+                        bus = MODBUS(bus_info.baudrate, bus_info.port_name,timeOut=bus_info.timeOut)
                         try:
-                            modbus.Connect_to_clint()
+                            bus.Connect_to_clint()
                             while True:
-                                modbus.read_data()
+                                bus.read_data()
                                 
                         except Exception as err:
-                            modbus.close()
+                            bus.close()
                             print (err)
                     else:
                         print("ERROR >>> Not find configration file for {} model".format(options['method'][3]))
                 else: 
                     print("ERROR >>> Please select any model")
+            
             elif options['method'][1] == "SERIAL":
-                print("Serial method is running ...")
-                try:
-                    
-                    while True:
-                        pass        
-                        
-                except Exception as err:
-                    
-                    print (err)
+                if options['method'][2] == "model":
+                    bus_info = conn.objects.filter(name=options['method'][3], connection_type="SERIAL").last()
+                    if bus_info is not None:
+                        bus = SERIALBUS(bus_info.baudrate, bus_info.port_name,timeOut=bus_info.timeOut)
+                        try:
+                            bus.Connect_to_clint()
+                            while True:
+                                bus.read_data()
+                                
+                        except Exception as err:
+                            bus.close()
+                            print (err)
+                    else:
+                        print("ERROR >>> Not find configration file for {} model".format(options['method'][3]))
+                else: 
+                    print("ERROR >>> Please select any model")
+            
             else:
                 if options['method'][1] == "":
                     print ('Please select method ["MODBUS","SERIAL"]')

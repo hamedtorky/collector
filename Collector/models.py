@@ -18,3 +18,15 @@ class Connection(models.Model):
     def __str__(self):
         return self.name
 
+
+class PXIConfiguration(models.Model):
+    name = models.CharField(max_length=100)
+    packet_size = models.IntegerField(default=200)
+    packet_header_1 = models.IntegerField(default=27)
+    packet_header_2 = models.IntegerField(default=59)
+    packet_header_3 = models.IntegerField(default=27)
+
+    CRC_size = models.IntegerField(default=2)
+    
+    def __str__(self):
+        return "{}  ***Note  : Active last model ".format(self.name)
