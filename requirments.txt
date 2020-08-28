@@ -2,3 +2,4 @@ django
 influxdb
 pymodbus
 serial
+pyzmq

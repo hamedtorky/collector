@@ -68,6 +68,7 @@ class SERIALBUS(object):
 
 
     def send_to_pipline(self):
+        # TODO ::: send to server
         print(":D")
 
     def close(self):
