@@ -14,41 +14,54 @@ class SERIALBUS(object):
         self.client = None
         self.UNIT = timeOut
         self.PktCounter = 0
+
         self.rxData = []
+        self.data = []
+
+
 
     def Connect_to_clint(self):
-        self.client = serial.Serial(self.tty, self.buadrate, timeout=self.UNIT)
+        self.client = serial.Serial(self.tty, self.buadrate, timeout=(0.01))
 
         # if self.client.is_open() is False:
         #     self.client.open()
-        
+
+    def write_data(self):
+        self.client.write('1'.encode())    
 
     def read_data(self):
         try:
-            self.client.write('1'.encode())
+            self.write_data()
             buff = self.client.read(1000)
-            buff = buff.decode('utf-8')
-            self.rxData = [buff[i:i+2] for i in range(0, len(buff), 2)]
-            self.rx_buffer_validation()
-            self.send_to_pipline()
-            
+            buff = buff.hex()
+            if len(buff) > 0:
+                self.rxData = [buff[i:i+2] for i in range(0, len(buff), 2)]
+                self.rx_buffer_validation()            
             
         except Exception as err:
             print (err)
 
     def rx_buffer_validation(self):
-        for i in range(len(self.rxData)):
-            if self.rxData[i] == '1B':
-                if self.rxData[i+1] == '3B':
-                    if self.rxData[i+2] == '1B':
-                        self.PktCounter = self.PktCounter +1
-                        print("{}> {}> {}".format(i, self.PktCounter, len(self.rxData)))
-                        print(self.rxData)
+        if self.rxData[0] == '1b' and self.rxData[1] == '3b' and self.rxData[2] == '1b' :
+            paket_size = ((int(self.rxData[9], 16) << 8) + int(self.rxData[10], 16))
+            counter = ((int(self.rxData[5], 16) << 28) + (int(self.rxData[6], 16) << 16)+ (int(self.rxData[7], 16) << 8)+ (int(self.rxData[8], 16)))
+            origin = (int(self.rxData[3], 16))
+            destination = (int(self.rxData[4], 16))
 
-        
-    
+            sum = paket_size + counter + origin + destination
+            
+            for i in range(paket_size):
+                sum = sum + int(self.rxData[i+11], 16)
+            _pkt_sum = (int(self.rxData[212], 16) << 8)+int(self.rxData[211], 16)
+
+            if _pkt_sum == sum :
+                self.send_to_pipline()
+            else:
+                print("paket not valid")    
+
+
+
     def send_to_pipline(self):
-        # print (self.rxData)
         pass
 
     def close(self):
