@@ -7,6 +7,11 @@ PORT_TYPE=(
     ('SERIAL','SERIAL')
     )
 
+FRAM_INFO_TYPE =(
+    ('PXI','PXI'),
+    ('SSI','SSI')
+    ) 
+
 
 class Connection(models.Model):
     name = models.CharField(max_length=100)
@@ -20,7 +25,7 @@ class Connection(models.Model):
 
 
 class PXIConfiguration(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, choices=FRAM_INFO_TYPE)
     packet_size = models.IntegerField(default=200)
     packet_header_1 = models.IntegerField(default=27)
     packet_header_2 = models.IntegerField(default=59)

@@ -1,5 +1,9 @@
 import serial
 import logging
+
+
+from Collector.models import PXIConfiguration as pxi
+
 FORMAT = ('%(asctime)-15s %(threadName)-15s '
           '%(levelname)-8s %(module)-15s:%(lineno)-8s %(message)s')
 logging.basicConfig(format=FORMAT)
@@ -17,7 +21,7 @@ class SERIALBUS(object):
 
         self.rxData = []
         self.data = []
-
+        self.fram_info = pxi.objects.filter(name="PXI").last()
 
 
     def Connect_to_clint(self):
@@ -31,8 +35,9 @@ class SERIALBUS(object):
 
     def read_data(self):
         try:
+            
             self.write_data()
-            buff = self.client.read(1000)
+            buff = self.client.read(self.fram_info.packet_size+50)
             buff = buff.hex()
             if len(buff) > 0:
                 self.rxData = [buff[i:i+2] for i in range(0, len(buff), 2)]
@@ -42,7 +47,8 @@ class SERIALBUS(object):
             print (err)
 
     def rx_buffer_validation(self):
-        if self.rxData[0] == '1b' and self.rxData[1] == '3b' and self.rxData[2] == '1b' :
+        if int(self.rxData[0],16) == self.fram_info.packet_header_1 and int(self.rxData[1],16) == self.fram_info.packet_header_2 and int(self.rxData[2],16) == self.fram_info.packet_header_3:
+
             paket_size = ((int(self.rxData[9], 16) << 8) + int(self.rxData[10], 16))
             counter = ((int(self.rxData[5], 16) << 28) + (int(self.rxData[6], 16) << 16)+ (int(self.rxData[7], 16) << 8)+ (int(self.rxData[8], 16)))
             origin = (int(self.rxData[3], 16))
@@ -62,7 +68,7 @@ class SERIALBUS(object):
 
 
     def send_to_pipline(self):
-        pass
+        print(":D")
 
     def close(self):
         self.client.close()
